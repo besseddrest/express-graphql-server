@@ -29,7 +29,13 @@ const MusicianType = new GraphQLObjectType({
   description: 'This represents a musician of a song',
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLInt) },
-    name: { type: GraphQLNonNull(GraphQLString) }
+    name: { type: GraphQLNonNull(GraphQLString) },
+    songs: {
+      type: new GraphQLList(SongType),
+      resolve: (musician) => {
+        return songs.filter(song => song.musicianId === musician.id)
+      }
+    }
   })
 })
 
@@ -42,8 +48,8 @@ const SongType = new GraphQLObjectType({
     musicianId: { type: GraphQLNonNull(GraphQLString) },
     musician: {
       type: MusicianType,
-      resolve: (song) => {
-        return musicians.find(musician => musician.id === song.musicianId)
+      resolve: (songs) => {
+        return musicians.find(musician => musician.id === songs.musicianId)
       }
     }
   })
@@ -53,10 +59,23 @@ const RootQueryType = new GraphQLObjectType({
   name: 'Query',
   description: 'Root Query',
   fields: () => ({
+    song: {
+      type: SongType,
+      descriptioon: 'A single song by bass player',
+      args: {
+        id: { type: GraphQLInt }
+      },
+      resolve: (parent, args) => songs.find(song => song.id === args.id)
+    },
     songs: {
       type: new GraphQLList(SongType),
       description: 'List of Songs',
       resolve: () => songs 
+    },
+    musicians: {
+      type: new GraphQLList(MusicianType),
+      description: 'List of Bass Players',
+      resolve: () => musicians
     }
   })
 })
